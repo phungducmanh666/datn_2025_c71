@@ -1,0 +1,86 @@
+spring:
+  application:
+    name: order
+  profiles:
+    active: dev
+---
+spring:
+  config:
+    activate:
+      on-profile: dev
+
+  # Datasource configuration cho JPA
+  datasource:
+    url: ${DB_URL:jdbc:sqlserver://localhost:1433;databaseName=order;encrypt=true;trustServerCertificate=true}
+    username: ${DB_USER:sa}
+    password: ${DB_PASS:YourStrong!Passw0rd}
+    driver-class-name: com.microsoft.sqlserver.jdbc.SQLServerDriver
+
+    # HikariCP connection pool settings
+    hikari:
+      connection-timeout: 20000
+      maximum-pool-size: 10
+      minimum-idle: 5
+      idle-timeout: 300000
+      max-lifetime: 1200000
+      pool-name: OrderHikariPool
+
+  # JPA configuration
+  jpa:
+    database-platform: org.hibernate.dialect.SQLServerDialect
+    hibernate:
+      ddl-auto: ${JPA_DDL_AUTO:update} # validate, update, create, create-drop
+      naming:
+        physical-strategy: org.hibernate.boot.model.naming.PhysicalNamingStrategyStandardImpl
+        implicit-strategy: org.springframework.boot.orm.jpa.hibernate.SpringImplicitNamingStrategy
+
+    show-sql: false
+    properties:
+      hibernate:
+        format_sql: true
+        use_sql_comments: true
+        jdbc:
+          batch_size: 20
+          fetch_size: 50
+        order_inserts: true
+        order_updates: true
+
+  kafka:
+    # Sử dụng biến môi trường KAFKA_BOOTSTRAP_SERVERS hoặc mặc định localhost:9092
+    bootstrap-servers: ${KAFKA_BOOTSTRAP_SERVERS:localhost:19092}
+
+    # Producer Configuration
+    producer:
+      key-serializer: org.apache.kafka.common.serialization.StringSerializer
+      value-serializer: org.springframework.kafka.support.serializer.JsonSerializer
+      acks: all
+      retries: 3
+
+    # Consumer Configuration
+    consumer:
+      key-deserializer: org.apache.kafka.common.serialization.StringDeserializer
+      value-deserializer: org.apache.kafka.common.serialization.ByteArrayDeserializer
+      group-id: ${KAFKA_CONSUMER_GROUP_ID:order-service-group}
+      auto-offset-reset: earliest
+      enable-auto-commit: false
+      properties:
+        spring.json.trusted.packages: "*"
+
+    # Listener Configuration
+    listener:
+      ack-mode: manual
+      concurrency: 3
+server:
+  port: ${SERVER_PORT:9003}
+
+---
+eureka:
+  client:
+    service-url:
+      defaultZone: ${EUREKA_CLIENT_SERVICEURL_DEFAULTZONE:http://localhost:8761/eureka/}
+
+zalopay:
+  appid: 553
+  key1: 9phuAOYhan4urywHTh0ndEXiV3pKHr5Q
+  key2: Iyz2habzyr7AG8SgvoBCbKwKi3UzlLi3
+  url: https://sandbox.zalopay.com.vn/v001/tpe

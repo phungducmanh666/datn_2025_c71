@@ -1,0 +1,156 @@
+server:
+  port: 8080
+
+spring:
+  application:
+    name: gate-way
+  cloud:
+    gateway:
+      routes:
+# image docker
+        - id: image-service
+          uri: lb://image # ví dụ dùng service discovery (Eureka/Consul)
+          predicates:
+            - Path=/image/**
+          filters:
+            - StripPrefix=1 # bỏ /service-a trước khi forward
+            - AddRequestHeader=X-Request-From,GATEWAY
+
+# location docker
+        - id: location-service
+          uri: lb://location # ví dụ dùng service discovery (Eureka/Consul)
+          predicates:
+            - Path=/location/**
+          filters:
+            - StripPrefix=1 # bỏ /service-a trước khi forward
+            - AddRequestHeader=X-Request-From,GATEWAY
+
+# product docker
+        - id: product-service
+          uri: lb://product # ví dụ dùng service discovery (Eureka/Consul)
+          predicates:
+            - Path=/product/**
+          filters:
+            - StripPrefix=1 # bỏ /service-a trước khi forward
+            - AddRequestHeader=X-Request-From,GATEWAY
+
+# order docker
+        - id: order-service
+          uri: lb://order # ví dụ dùng service discovery (Eureka/Consul)
+          predicates:
+            - Path=/order/**
+          filters:
+            - StripPrefix=1 # bỏ /service-a trước khi forward
+            - AddRequestHeader=X-Request-From,GATEWAY
+# user docker
+        - id: user-service
+          uri: lb://user # ví dụ dùng service discovery (Eureka/Consul)
+          predicates:
+            - Path=/user/**
+          filters:
+            - StripPrefix=1 # bỏ /service-a trước khi forward
+            - AddRequestHeader=X-Request-From,GATEWAY
+# warehouse docker
+        - id: warehouse-service
+          uri: lb://warehouse # ví dụ dùng service discovery (Eureka/Consul)
+          predicates:
+            - Path=/warehouse/**
+          filters:
+            - StripPrefix=1 # bỏ /service-a trước khi forward
+            - AddRequestHeader=X-Request-From,GATEWAY
+
+# chatbot docker
+        - id: chatbot-service
+          uri: lb://chatbot # ví dụ dùng service discovery (Eureka/Consul)
+          predicates:
+            - Path=/chatbot/**
+          filters:
+            - StripPrefix=1 # bỏ /service-a trước khi forward
+            - AddRequestHeader=X-Request-From,GATEWAY
+
+
+# promotion docker
+        - id: promotion-service
+          uri: lb://promotion # ví dụ dùng service discovery (Eureka/Consul)
+          predicates:
+            - Path=/promotion/**
+          filters:
+            - StripPrefix=1 # bỏ /service-a trước khi forward
+            - AddRequestHeader=X-Request-From,GATEWAY
+
+# __________________________________________________________________________________________________________
+
+# chatbot local
+#         - id: chatbot-service
+#           uri: http://host.docker.internal:10000 # ví dụ dùng service discovery (Eureka/Consul)
+#           predicates:
+#             - Path=/chatbot/**
+#           filters:
+#             - StripPrefix=1 # bỏ /service-a trước khi forward
+#             - AddRequestHeader=X-Request-From,GATEWAY
+
+# product local
+        # - id: product-service
+        #   uri: http://host.docker.internal:9000 # ví dụ dùng service discovery (Eureka/Consul)
+        #   predicates:
+        #     - Path=/product/**
+        #   filters:
+        #     - StripPrefix=1 # bỏ /service-a trước khi forward
+        #     - AddRequestHeader=X-Request-From,GATEWAY
+# user local
+        # - id: user-service
+        #   uri: http://host.docker.internal:9002 # ví dụ dùng service discovery (Eureka/Consul)
+        #   predicates:
+        #     - Path=/user/**
+        #   filters:
+        #     - StripPrefix=1 # bỏ /service-a trước khi forward
+        #     - AddRequestHeader=X-Request-From,GATEWAY
+# warehouse local
+        # - id: warehouse-service
+        #   uri: http://host.docker.internal:9001 # ví dụ dùng service discovery (Eureka/Consul)
+        #   predicates:
+        #     - Path=/warehouse/**
+        #   filters:
+        #     - StripPrefix=1 # bỏ /service-a trước khi forward
+        #     - AddRequestHeader=X-Request-From,GATEWAY
+# order local 
+        # - id: order-service
+        #   uri: http://host.docker.internal:9003 # ví dụ dùng service discovery (Eureka/Consul)
+        #   predicates:
+        #     - Path=/order/**
+        #   filters:
+        #     - StripPrefix=1 # bỏ /service-a trước khi forward
+        #     - AddRequestHeader=X-Request-From,GATEWAY
+
+# recommend local 
+        - id: recommend-service
+          uri: http://host.docker.internal:11000 # ví dụ dùng service discovery (Eureka/Consul)
+          predicates:
+            - Path=/recommend/**
+          filters:
+            - StripPrefix=1 # bỏ /service-a trước khi forward
+            - AddRequestHeader=X-Request-From,GATEWAY
+
+# promotion local 
+        # - id: promotion-service
+        #   uri: http://host.docker.internal:12000 # ví dụ dùng service discovery (Eureka/Consul)
+        #   predicates:
+        #     - Path=/promotion/**
+        #   filters:
+        #     - StripPrefix=1 # bỏ /service-a trước khi forward
+        #     - AddRequestHeader=X-Request-From,GATEWAY
+
+
+
+# Actuator endpoints (tùy chọn)
+management:
+  endpoints:
+    web:
+      exposure:
+        include: "*"
+
+---
+eureka:
+  client:
+    service-url:
+      defaultZone: ${EUREKA_CLIENT_SERVICEURL_DEFAULTZONE:http://localhost:8761/eureka/}

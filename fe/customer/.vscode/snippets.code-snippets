@@ -1,0 +1,147 @@
+{
+    "Next.js Layout": {
+        "prefix": "nlayout",
+        "body": [
+            "export default function ${1:LayoutName}({",
+            " children,",
+            "}: Readonly<{",
+            " children: React.ReactNode;",
+            "}>) {",
+            "  return (<>{children}</>)",
+            "};",
+        ],
+        "description": "create a basic Next.js layout"
+    },
+    "Next.js Component (Functional)": {
+        "prefix": "ncomp",
+        "body": [
+            "import React from 'react'",
+            "import {Flex} from 'antd'",
+            "",
+            "interface ${1:ComponentName}Props{",
+            "}",
+            "",
+            "const ${1:ComponentName}: React.FC<${1:ComponentName}Props> = ({}) => {",
+            "  return <Flex vertical gap={10}>",
+            "         { }",
+            "     </Flex>",
+            "",
+            "};",
+            "",
+            "export default ${1:ComponentName};"
+        ],
+        "description": "create a basic Next.js function component"
+    },
+    "Next.js Page (Basic)": {
+        "prefix": "npage", // Từ khóa cho page component
+        "body": [
+            "import React from 'react';",
+            "",
+            "const ${1:PageName} = () => {",
+            "  return (",
+            "    <main>",
+            "      <h1>${1:PageName}</h1>",
+            "    </main>",
+            "  );",
+            "};",
+            "",
+            "export default ${1:PageName};",
+            ""
+        ],
+        "description": "Creates a basic Next.js page component."
+    },
+    "Next.js Page (with getServerSideProps)": {
+        "prefix": "nsspage", // Từ khóa cho page với getServerSideProps
+        "body": [
+            "import React from 'react';",
+            "import { GetServerSideProps } from 'next';",
+            "",
+            "interface ${1:PageName}Props {",
+            "  data: any;",
+            "}",
+            "",
+            "const ${1:PageName}: React.FC<${1:PageName}Props> = ({ data }) => {",
+            "  return (",
+            "    <main>",
+            "      <h1>${1:PageName} Page</h1>",
+            "      <pre>{JSON.stringify(data, null, 2)}</pre>",
+            "    </main>",
+            "  );",
+            "};",
+            "",
+            "export const getServerSideProps: GetServerSideProps = async (context) => {",
+            "  // Fetch data on each request",
+            "  // const res = await fetch('https://api.example.com/data');",
+            "  // const data = await res.json();",
+            "  const data = { message: 'Hello from getServerSideProps' }; // Thay thế bằng logic fetch thực tế",
+            "",
+            "  return {",
+            "    props: { data }, // will be passed to the page component as props",
+            "  };",
+            "};",
+            "",
+            "export default ${1:PageName};",
+            ""
+        ],
+        "description": "Creates a Next.js page component with getServerSideProps."
+    },
+    "Next.js Memo Functional Component": {
+        "prefix": "nmfc", // Từ khóa để kích hoạt snippet
+        "body": [
+            "import React from 'react';",
+            "",
+            "interface ${1:ComponentName}Props {",
+            "}",
+            "",
+            "const ${1:ComponentName}: React.FC<${1:ComponentName}Props> = ({  }) => {",
+            "  // Logic của component",
+            "  console.log('${1:ComponentName} rendered');",
+            "",
+            "  return (",
+            "    <div>",
+            "      <h2>${1:ComponentName}</h2>",
+            "    </div>",
+            "  );",
+            "};",
+            "",
+            "export default React.memo(${1:ComponentName});",
+            ""
+        ],
+        "description": "Creates a React functional component wrapped with React.memo."
+    },
+    "Next.js Functional Component with forwardRef and useImperativeHandle": {
+        "prefix": "nfrcomp",
+        "body": [
+            "import React, { useRef, useImperativeHandle, forwardRef } from 'react';",
+            "",
+            "interface ${TM_FILENAME_BASE}Props {",
+            "}",
+            "",
+            "interface ${TM_FILENAME_BASE}Ref {",
+            "   focus: () => void",
+            "}",
+            "",
+            "const ${TM_FILENAME_BASE} = forwardRef<${TM_FILENAME_BASE}Ref, ${TM_FILENAME_BASE}Props>((props, ref) => {",
+            "  const internalRef = useRef(null);",
+            "",
+            "  useImperativeHandle(ref, () => ({",
+            "    focus: () => {",
+            "      console.log('focus')",
+            "    },",
+            "  }));",
+            "",
+            "  return (",
+            "    <input",
+            "      type=\"text\"",
+            "      ref={internalRef}",
+            "      {...props}",
+            "    />",
+            "  );",
+            "});",
+            "",
+            "export default ${TM_FILENAME_BASE};",
+            ""
+        ],
+        "description": "Creates a Next.js functional component using forwardRef and useImperativeHandle"
+    }
+}
