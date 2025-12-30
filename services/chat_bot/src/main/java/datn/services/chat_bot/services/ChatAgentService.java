@@ -38,6 +38,8 @@ public class ChatAgentService {
         System.out.println("\n\nBusiness Context: " + businessContext);
         System.out.println("Chat History Context: " + chatHistoryContext + "\n\n");
 
-        return List.of(businessContext, productContext, chatHistoryContext);
+        return List.of(businessContext,
+                productContext,
+                chatHistoryContext);
     }
 }

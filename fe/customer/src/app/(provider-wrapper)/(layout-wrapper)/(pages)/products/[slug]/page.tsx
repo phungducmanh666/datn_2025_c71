@@ -119,7 +119,7 @@ const ProductImage: React.FC<ProductImageProps> = ({ uuid, avatar }) => {
           prevArrow={<IoIosArrowBack color={token.colorText} size={20} />}
           style={{
             backgroundColor: token.colorBgBase, // Màu trắng hoặc bỏ hẳn
-            padding: "10px 0"
+            padding: "10px 0",
           }}
           dotPosition="bottom"
         >
@@ -279,8 +279,8 @@ const Review: React.FC<ReviewProps> = ({ review }) => {
             <Flex gap={10}>
               <AvatarServer src={customer.photoUrl} size={"small"} />
               <Title
-              level={5}
-            >{`${customer.firstName} ${customer.lastName}`}</Title>
+                level={5}
+              >{`${customer.firstName} ${customer.lastName}`}</Title>
             </Flex>
             <Rate value={review.star} style={{ fontSize: "1rem" }} disabled />
             <Typography style={{ marginLeft: "10px" }}>
@@ -322,7 +322,9 @@ const ProductReviews: React.FC<ProductReviewsProps> = ({ uuid }) => {
 interface ProductRecommendationProps {
   productUUID: string;
 }
-const ProductRecommendation: React.FC<ProductRecommendationProps> = ({productUUID}) => {
+const ProductRecommendation: React.FC<ProductRecommendationProps> = ({
+  productUUID,
+}) => {
   const [customerData, setCustomerData] = useState<CustomerData | undefined>();
   useEffect(() => {
     const storedCustomer = LocalStorageUtil.getCustomer();
@@ -331,8 +333,9 @@ const ProductRecommendation: React.FC<ProductRecommendationProps> = ({productUUI
     }
   }, []);
   const userUUID = customerData?.uuid;
-  const { data: idList = [], isFetching: fetchingIds} = useRecommendedRelatedProducts(userUUID ?? "", productUUID ?? "");
-  
+  const { data: idList = [], isFetching: fetchingIds } =
+    useRecommendedRelatedProducts(userUUID ?? "", productUUID ?? "");
+
   const arr: string[] = Array.from(idList ?? []);
   const { data: products, isFetching: loading } = useProductsByIds(arr);
 
@@ -378,12 +381,12 @@ const PageProductDetail: React.FC<PageProductDetailProps> = ({}) => {
     (): DescriptionsProps["items"] =>
       data
         ? [
-          {
-            key: 7,
-            label: "Dòng sản phẩm",
-            children: <ProductProductLines uuid={uuid} />,
-          },
-        ]
+            {
+              key: 7,
+              label: "Dòng sản phẩm",
+              children: <ProductProductLines uuid={uuid} />,
+            },
+          ]
         : [],
     [data]
   );
@@ -394,83 +397,88 @@ const PageProductDetail: React.FC<PageProductDetailProps> = ({}) => {
 
   const [priceInfo, setPriceInfo] = useState<DiscountInfo>();
 
-
   return (
     <>
-    {data &&
-      <>
-      <Flex vertical gap={10}>
-        <Breadcrumb items={breadCrumbItems} />
-        <Row gutter={[100, 10]} style={{ padding: 40 }}>
-          <Col md={{ span: 24 }} xl={{ span: 12 }}>
-            <Badge.Ribbon
-              text={priceInfo && priceInfo.discountLabel}
-              color="#ef4444" // Tailwind red-500 hex code
-              className="font-bold shadow-md"
-              placement="start"
-            >
-              <ProductImage uuid={uuid} avatar={data?.photoUrl} />
-
-            </Badge.Ribbon>
-          </Col>
-          <Col md={{ span: 24 }} xl={{ span: 12 }} style={{ padding: 20 }}>
-            <Flex vertical gap={50}>
-             <Card>
-                <Flex vertical gap={20}>
-                  <Title level={4} className="!mb-0">{data?.name}</Title>
-                  {data &&
-                    <ProductPriceInfo product={data} onGetPriceInfo={(info) => setPriceInfo(info)} />
-                  }
-                  <Flex>{ConvertUtil.getProductStatusLabel(data.status)}</Flex>
-                  <Descriptions
-                    column={2}
-                    layout="horizontal"
-                    bordered={false}
-                    items={desItems}
-                  />
+      {data && (
+        <>
+          <Flex vertical gap={10}>
+            <Breadcrumb items={breadCrumbItems} />
+            <Row gutter={[100, 10]} style={{ padding: 40 }}>
+              <Col md={{ span: 24 }} xl={{ span: 12 }}>
+                <Badge.Ribbon
+                  text={priceInfo && priceInfo.discountLabel}
+                  color="#ef4444" // Tailwind red-500 hex code
+                  className="font-bold shadow-md"
+                  placement="start"
+                >
+                  <ProductImage uuid={uuid} avatar={data?.photoUrl} />
+                </Badge.Ribbon>
+              </Col>
+              <Col md={{ span: 24 }} xl={{ span: 12 }} style={{ padding: 20 }}>
+                <Flex vertical gap={50}>
+                  <Card>
+                    <Flex vertical gap={20}>
+                      <Title level={4} className="!mb-0">
+                        {data?.name}
+                      </Title>
+                      {data && (
+                        <ProductPriceInfo
+                          product={data}
+                          onGetPriceInfo={(info) => setPriceInfo(info)}
+                        />
+                      )}
+                      <Flex>
+                        {ConvertUtil.getProductStatusLabel(data.status)}
+                      </Flex>
+                      <Descriptions
+                        column={2}
+                        layout="horizontal"
+                        bordered={false}
+                        items={desItems}
+                      />
+                    </Flex>
+                  </Card>
+                  <ProductRating uuid={uuid} />
+                  <Flex gap={10}>
+                    <BTNBuy toolTipTitle="Mua ngay" productUUID={uuid}>
+                      Mua ngay
+                    </BTNBuy>
+                    <BTNAddToCart
+                      toolTipTitle="Thêm vào giỏ hàng"
+                      productUUID={uuid}
+                    >
+                      Thêm vào giỏ hàng
+                    </BTNAddToCart>
+                    <BTNDetail
+                      shape="default"
+                      color="orange"
+                      toolTipColor="orange"
+                      toolTipTitle="Nhấn để xem thông số sản phẩm"
+                      onClick={() => setOpenPopupAttribute(true)}
+                    >
+                      Thông số
+                    </BTNDetail>
+                  </Flex>
                 </Flex>
-              </Card>
-              <ProductRating uuid={uuid} />
-              <Flex gap={10}>
-                <BTNBuy toolTipTitle="Mua ngay" productUUID={uuid}>
-                  Mua ngay
-                </BTNBuy>
-                <BTNAddToCart
-                  toolTipTitle="Thêm vào giỏ hàng"
-                  productUUID={uuid}
-                >
-                  Thêm vào giỏ hàng
-                </BTNAddToCart>
-                <BTNDetail
-                  shape="default"
-                  color="orange"
-                  toolTipColor="orange"
-                  toolTipTitle="Nhấn để xem thông số sản phẩm"
-                  onClick={() => setOpenPopupAttribute(true)}
-                >
-                  Thông số
-                </BTNDetail>
-              </Flex>
-            </Flex>
-          </Col>
-        </Row>
-        <Card title="Đánh giá">
-          <ProductReviews uuid={uuid} />
-        </Card>
-      </Flex>
-      <PopupProductAttribute
-        onClose={() => setOpenPopupAttribute(false)}
-        uuid={uuid}
-        open={openPopupAttribute}
-      />
-            <Flex vertical gap={40}>
-      <Typography style={{ fontWeight: 500, fontSize:30 }}>
-              Một số sản phẩm liên quan
+              </Col>
+            </Row>
+            <Card title="Đánh giá">
+              <ProductReviews uuid={uuid} />
+            </Card>
+          </Flex>
+          <PopupProductAttribute
+            onClose={() => setOpenPopupAttribute(false)}
+            uuid={uuid}
+            open={openPopupAttribute}
+          />
+          <Flex vertical gap={40}>
+            <Typography style={{ fontWeight: 500, fontSize: 30 }}>
+              Có thể bạn quan tâm
             </Typography>
-            <ProductRecommendation productUUID={uuid}/>
-      </Flex>
-      </>
-      }
+            <ProductRecommendation productUUID={uuid} />
+          </Flex>
+        </>
+      )}
     </>
   );
 };

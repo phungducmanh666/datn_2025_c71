@@ -112,13 +112,16 @@ services:
       - PERMISSIONS=thongke,sanpham,kho,taikhoan,donhang,khachhang
       - ROOT_USERNAME=admin123
       - ROOT_PASSWORD=admin123
-      - GOOGLE_AUTH_CLIENT_ID=
-      - GOOGLE_AUTH_CLIENT_SECRET=
+      - GOOGLE_AUTH_CLIENT_ID=212014364101-b72rca9c0shubom4t6547rdicc5gkf20.apps.googleusercontent.com
+      - GOOGLE_AUTH_CLIENT_SECRET=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
       - GOOGLE_AUTH_REDIRECT_URL=http://localhost:4000/auth/google/callback
     ports:
       - "9002:9002"
     networks:
       - app-network
+    depends_on:
+      - database-service
+    restart: unless-stopped 
    
   warehouse-service:
     build:
@@ -211,7 +214,7 @@ services:
       - EUREKA_CLIENT_SERVICEURL_DEFAULTZONE=http://discovery-service:8761/eureka/
       - QDRANT_HOST=qdrant-service
       - QDRANT_PORT=6334
-      - GEMINI_API_KEY=AIzaSyBYU-syvSxOrdwcVLcIhR_jMxVhjD1UypM
+      - GEMINI_API_KEY=AIzaSyCTGNEA_TGJYrHPEG6Omr0m-GGuBbEeC1Y
     ports:
       - "10000:10000"
     networks:
