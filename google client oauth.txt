@@ -1,0 +1,2 @@
+google client id: 212014364101-b72rca9c0shubom4t6547rdicc5gkf20.apps.googleusercontent.com
+google client secrect: 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
