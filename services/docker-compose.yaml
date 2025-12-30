@@ -112,8 +112,8 @@ services:
       - PERMISSIONS=thongke,sanpham,kho,taikhoan,donhang,khachhang
       - ROOT_USERNAME=admin123
       - ROOT_PASSWORD=admin123
-      - GOOGLE_AUTH_CLIENT_ID=212014364101-b72rca9c0shubom4t6547rdicc5gkf20.apps.googleusercontent.com
-      - GOOGLE_AUTH_CLIENT_SECRET=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
+      - GOOGLE_AUTH_CLIENT_ID=client_id
+      - GOOGLE_AUTH_CLIENT_SECRET=client_secret
       - GOOGLE_AUTH_REDIRECT_URL=http://localhost:4000/auth/google/callback
     ports:
       - "9002:9002"
