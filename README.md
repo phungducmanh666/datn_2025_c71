@@ -36,6 +36,7 @@ Tất cả các database sau được tạo trong **cùng một SQL Server conta
 3. `order` - Order Service (JDBC)
 4. `warehouse` - Warehouse Service (JDBC)
 5. `promotion` - Promotion Service (JDBC)
+6. `recommend` - Recommend Service
 
 ## Các Bước Cài Đặt và Chạy Dự Án
 
@@ -77,6 +78,8 @@ CREATE DATABASE warehouse;
 GO
 CREATE DATABASE promotion;
 GO
+CREATE DATABASE recommend;
+GO
 EXIT
 ```
 
@@ -87,13 +90,14 @@ docker exec -it sqlserver-db /opt/mssql-tools/bin/sqlcmd -S localhost -U sa -P "
 docker exec -it sqlserver-db /opt/mssql-tools/bin/sqlcmd -S localhost -U sa -P "YourStrong!Passw0rd" -Q "CREATE DATABASE [order]"
 docker exec -it sqlserver-db /opt/mssql-tools/bin/sqlcmd -S localhost -U sa -P "YourStrong!Passw0rd" -Q "CREATE DATABASE warehouse"
 docker exec -it sqlserver-db /opt/mssql-tools/bin/sqlcmd -S localhost -U sa -P "YourStrong!Passw0rd" -Q "CREATE DATABASE promotion"
+docker exec -it sqlserver-db /opt/mssql-tools/bin/sqlcmd -S localhost -U sa -P "YourStrong!Passw0rd" -Q "CREATE DATABASE recommend"
 ```
 
-### Bước 3: Chạy SQL Schema cho Product và User Service
+### Bước 3: Chạy SQL Schema cho Product, User và Recommend Service
 
-Các service sẽ tự động tạo database schema khi chạy, **TRỪ** `product service` và `user service`.
+Các service sẽ tự động tạo database schema khi chạy, **TRỪ** `product service`, `user service` và `recommend service`.
 
-Chạy các file SQL để tạo schema cho hai service này:
+Chạy các file SQL để tạo schema cho ba service này:
 
 #### Sử dụng SSMS
 1. Kết nối đến SQL Server
@@ -101,6 +105,8 @@ Chạy các file SQL để tạo schema cho hai service này:
 3. Chọn database `product` và Execute
 4. Mở file `./database_schema_sql/user.database.sql`
 5. Chọn database `user` và Execute
+6. Mở file `./database_schema_sql/recommend.database.sql`
+7. Chọn database `recommend` và Execute
 
 #### Hoặc sử dụng sqlcmd
 ```bash
@@ -109,6 +115,9 @@ docker exec -i sqlserver-db /opt/mssql-tools/bin/sqlcmd -S localhost -U sa -P "Y
 
 # Import schema cho user database
 docker exec -i sqlserver-db /opt/mssql-tools/bin/sqlcmd -S localhost -U sa -P "YourStrong!Passw0rd" -d user < ./database_schema_sql/user.database.sql
+
+# Import schema cho recommend database
+docker exec -i sqlserver-db /opt/mssql-tools/bin/sqlcmd -S localhost -U sa -P "YourStrong!Passw0rd" -d recommend < ./database_schema_sql/recommend.database.sql
 ```
 
 ### Bước 4: Cấu Hình Google OAuth
@@ -351,13 +360,13 @@ Khi chạy lần đầu tiên, hệ thống sẽ tự động tạo một tài k
 | Order | `order` | JDBC | 9003 |
 | Warehouse | `warehouse` | JDBC | 9001 |
 | Promotion | `promotion` | JDBC | 12000 |
+| Recommend | `recommend` | - | 11000 |
 
 ### Message Queue (Kafka)
 
 Kafka được sử dụng bởi:
 - **Order Service** - Xử lý đơn hàng bất đồng bộ
 - **Warehouse Service** - Đồng bộ tồn kho
-- **Promotion Service** - Áp dụng khuyến mãi
 
 **Kafka Ports:**
 - Internal (Docker): `kafka-1:9092`
@@ -404,7 +413,7 @@ docker-compose logs database-service
 
 ### 4. Lỗi Kafka Connection
 
-**Triệu chứng**: Order/Warehouse/Promotion service không hoạt động
+**Triệu chứng**: Order/Warehouse service không hoạt động
 
 **Giải pháp:**
 ```bash
@@ -508,12 +517,12 @@ docker-compose up -d --build
    docker-compose up -d database-service
    ```
 
-2. ✅ Tạo 5 database trống: `product`, `user`, `order`, `warehouse`, `promotion`
+2. ✅ Tạo 6 database trống: `product`, `user`, `order`, `warehouse`, `promotion`, `recommend`
    ```bash
    docker exec -it sqlserver-db /opt/mssql-tools/bin/sqlcmd -S localhost -U sa -P "YourStrong!Passw0rd"
    ```
 
-3. ✅ Chạy SQL schema cho `product` và `user` từ `./database_schema_sql/*.sql`
+3. ✅ Chạy SQL schema cho `product`, `user` và `recommend` từ `./database_schema_sql/*.sql`
 
 4. ✅ Cấu hình Google OAuth trong `./services/docker-compose.yaml`
    - Client ID: `212014364101-b72rca9c0shubom4t6547rdicc5gkf20.apps.googleusercontent.com`
