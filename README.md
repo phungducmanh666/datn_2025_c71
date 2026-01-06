@@ -372,6 +372,283 @@ Kafka được sử dụng bởi:
 - Internal (Docker): `kafka-1:9092`
 - External (Host): `localhost:19092`
 
+## SQL Server Agent Job - Đồng Bộ Dữ Liệu Gợi Ý Sản Phẩm
+
+### Tổng Quan
+
+Hệ thống sử dụng **SQL Server Agent Job** để tự động đồng bộ dữ liệu đánh giá sản phẩm từ **Order Database** sang **Recommend Database**. Job này chạy định kỳ hàng ngày để chuẩn bị dữ liệu cho hệ thống gợi ý sản phẩm (recommendation system).
+
+### Thông Tin Job
+
+| Thuộc tính | Giá trị |
+|------------|---------|
+| **Tên Job** | `Daily_Updade` |
+| **Trạng thái** | Enabled (Đã kích hoạt) |
+| **Database** | `recommendation_system` (recommend) |
+| **Stored Procedure** | `sp_rebuild_utility_matrix` |
+| **Lịch chạy** | Hàng ngày lúc 01:00:00 (1:00 AM) |
+| **Tần suất** | Daily (Mỗi ngày) |
+| **Ngày bắt đầu** | 29/10/2025 |
+
+### Chức Năng
+
+Job này thực hiện các nhiệm vụ sau:
+
+1. **Thu thập dữ liệu đánh giá**: Lấy thông tin đánh giá sản phẩm của người dùng từ Order Database
+2. **Xây dựng Utility Matrix**: Tạo ma trận tiện ích (utility matrix) cho thuật toán collaborative filtering
+3. **Chuẩn bị dữ liệu**: Xử lý và chuẩn hóa dữ liệu để phục vụ cho việc gợi ý sản phẩm
+4. **Cập nhật Recommend Database**: Đồng bộ dữ liệu đã xử lý vào database của recommendation service
+
+> **💡 Lý do chạy vào 1:00 AM:**
+> - Thời điểm ít người dùng truy cập nhất
+> - Giảm thiểu ảnh hưởng đến hiệu năng hệ thống
+> - Đảm bảo dữ liệu gợi ý luôn được cập nhật mỗi ngày
+
+### Cài Đặt SQL Server Agent Job
+
+#### Bước 1: Kích Hoạt SQL Server Agent
+
+SQL Server Agent cần được kích hoạt để chạy các scheduled jobs:
+
+```bash
+# Kiểm tra trạng thái SQL Server Agent
+docker exec -it sqlserver-db /opt/mssql-tools/bin/sqlcmd -S localhost -U sa -P "YourStrong!Passw0rd" -Q "EXEC sp_help_job"
+
+# Kích hoạt SQL Server Agent (nếu chưa chạy)
+docker exec -it sqlserver-db /opt/mssql-tools/bin/sqlcmd -S localhost -U sa -P "YourStrong!Passw0rd" -Q "EXEC msdb.dbo.sp_start_job N'SQLServerAgent'"
+```
+
+> **⚠️ Lưu ý**: SQL Server Agent **không khả dụng** trên SQL Server Express Edition. Cần sử dụng SQL Server Standard, Enterprise, hoặc Developer Edition.
+
+#### Bước 2: Tạo Job từ Script
+
+Chạy file SQL để tạo job:
+
+```bash
+# Sử dụng sqlcmd
+docker exec -i sqlserver-db /opt/mssql-tools/bin/sqlcmd -S localhost -U sa -P "YourStrong!Passw0rd" < ./database_schema_sql/JOB.sql
+```
+
+**Hoặc sử dụng SQL Server Management Studio (SSMS):**
+1. Kết nối đến SQL Server
+2. Mở file `./database_schema_sql/JOB.sql`
+3. Execute script
+
+#### Bước 3: Kiểm Tra Job Đã Được Tạo
+
+```sql
+-- Kiểm tra danh sách jobs
+USE msdb;
+GO
+SELECT 
+    job_id,
+    name,
+    enabled,
+    date_created,
+    date_modified
+FROM dbo.sysjobs
+WHERE name = 'Daily_Updade';
+GO
+
+-- Xem chi tiết schedule
+EXEC sp_help_jobschedule @job_name = 'Daily_Updade';
+GO
+```
+
+### Quản Lý Job
+
+#### Chạy Job Thủ Công
+
+Nếu cần chạy job ngay lập tức mà không đợi đến lịch định kỳ:
+
+```sql
+USE msdb;
+GO
+EXEC dbo.sp_start_job N'Daily_Updade';
+GO
+```
+
+**Hoặc qua sqlcmd:**
+```bash
+docker exec -it sqlserver-db /opt/mssql-tools/bin/sqlcmd -S localhost -U sa -P "YourStrong!Passw0rd" -Q "USE msdb; EXEC dbo.sp_start_job N'Daily_Updade';"
+```
+
+#### Kiểm Tra Lịch Sử Chạy Job
+
+```sql
+USE msdb;
+GO
+SELECT 
+    j.name AS JobName,
+    h.run_date,
+    h.run_time,
+    h.run_duration,
+    h.run_status,
+    h.message
+FROM dbo.sysjobhistory h
+INNER JOIN dbo.sysjobs j ON h.job_id = j.job_id
+WHERE j.name = 'Daily_Updade'
+ORDER BY h.run_date DESC, h.run_time DESC;
+GO
+```
+
+**Giải thích run_status:**
+- `0` = Failed (Thất bại)
+- `1` = Succeeded (Thành công)
+- `2` = Retry (Thử lại)
+- `3` = Canceled (Đã hủy)
+- `4` = In Progress (Đang chạy)
+
+#### Tắt/Bật Job
+
+```sql
+-- Tắt job
+USE msdb;
+GO
+EXEC dbo.sp_update_job 
+    @job_name = N'Daily_Updade',
+    @enabled = 0;
+GO
+
+-- Bật job
+USE msdb;
+GO
+EXEC dbo.sp_update_job 
+    @job_name = N'Daily_Updade',
+    @enabled = 1;
+GO
+```
+
+#### Xóa Job
+
+```sql
+USE msdb;
+GO
+EXEC dbo.sp_delete_job 
+    @job_name = N'Daily_Updade';
+GO
+```
+
+### Stored Procedure: sp_rebuild_utility_matrix
+
+Job này gọi stored procedure `sp_rebuild_utility_matrix` trong database `recommendation_system`. Procedure này có nhiệm vụ:
+
+1. **Trích xuất dữ liệu đánh giá** từ bảng reviews/ratings trong Order Database
+2. **Xây dựng User-Item Matrix** (ma trận người dùng - sản phẩm)
+3. **Tính toán similarity scores** giữa các sản phẩm
+4. **Lưu trữ kết quả** vào các bảng trong Recommend Database
+
+> **📝 Chi tiết**: Xem file `./database_schema_sql/recommend.database.sql` để biết cấu trúc của stored procedure.
+
+### Luồng Dữ Liệu
+
+```
+┌─────────────────┐
+│  Order Database │
+│                 │
+│  - Reviews      │
+│  - Ratings      │
+│  - User Orders  │
+└────────┬────────┘
+         │
+         │ SQL Server Agent Job
+         │ (Daily at 1:00 AM)
+         │
+         ▼
+┌─────────────────────────┐
+│  sp_rebuild_utility_matrix │
+│                         │
+│  1. Extract ratings     │
+│  2. Build matrix        │
+│  3. Calculate scores    │
+└────────┬────────────────┘
+         │
+         ▼
+┌─────────────────┐
+│ Recommend DB    │
+│                 │
+│ - Utility Matrix│
+│ - Similarity    │
+│ - Preferences   │
+└────────┬────────┘
+         │
+         ▼
+┌─────────────────┐
+│ Recommend       │
+│ Service :11000  │
+│                 │
+│ Product         │
+│ Recommendations │
+└─────────────────┘
+```
+
+### Troubleshooting
+
+#### Job Không Chạy
+
+**Nguyên nhân có thể:**
+1. SQL Server Agent chưa được kích hoạt
+2. Sử dụng SQL Server Express (không hỗ trợ Agent)
+3. Job bị disable
+4. Lỗi trong stored procedure
+
+**Giải pháp:**
+
+```sql
+-- 1. Kiểm tra SQL Server Edition
+SELECT SERVERPROPERTY('Edition') AS Edition;
+GO
+
+-- 2. Kiểm tra trạng thái job
+USE msdb;
+GO
+SELECT name, enabled FROM dbo.sysjobs WHERE name = 'Daily_Updade';
+GO
+
+-- 3. Xem lỗi gần nhất
+SELECT TOP 1 message 
+FROM msdb.dbo.sysjobhistory h
+INNER JOIN msdb.dbo.sysjobs j ON h.job_id = j.job_id
+WHERE j.name = 'Daily_Updade' AND h.run_status = 0
+ORDER BY h.run_date DESC, h.run_time DESC;
+GO
+```
+
+#### Stored Procedure Lỗi
+
+```sql
+-- Chạy thử stored procedure thủ công để debug
+USE recommendation_system;
+GO
+EXEC dbo.sp_rebuild_utility_matrix;
+GO
+```
+
+Nếu có lỗi, kiểm tra:
+- Kết nối giữa Order DB và Recommend DB
+- Quyền truy cập của user `sa`
+- Cấu trúc bảng trong cả hai databases
+
+### Giải Pháp Thay Thế (Nếu Không Dùng SQL Server Agent)
+
+Nếu sử dụng SQL Server Express hoặc không thể dùng SQL Server Agent, có thể:
+
+1. **Sử dụng Windows Task Scheduler**:
+   ```powershell
+   # Tạo script PowerShell: rebuild_matrix.ps1
+   sqlcmd -S localhost,1433 -U sa -P "YourStrong!Passw0rd" -d recommendation_system -Q "EXEC dbo.sp_rebuild_utility_matrix"
+   ```
+
+2. **Sử dụng Cron Job (Linux)**:
+   ```bash
+   # Thêm vào crontab
+   0 1 * * * docker exec sqlserver-db /opt/mssql-tools/bin/sqlcmd -S localhost -U sa -P "YourStrong!Passw0rd" -d recommendation_system -Q "EXEC dbo.sp_rebuild_utility_matrix"
+   ```
+
+3. **Tích hợp vào Application**:
+   - Tạo scheduled task trong Spring Boot (Order Service)
+   - Sử dụng `@Scheduled` annotation để chạy định kỳ
+
 ## Xử Lý Lỗi Thường Gặp
 
 ### 1. Lỗi Khi Nhập Kho hoặc Tạo Khuyến Mãi
