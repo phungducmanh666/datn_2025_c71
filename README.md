@@ -557,17 +557,17 @@ Job này gọi stored procedure `sp_rebuild_utility_matrix` trong database `reco
 ┌─────────────────────────┐
 │  sp_rebuild_utility_matrix │
 │                         │
-│  1. Extract ratings     │  
+│  1. Extract ratings     │
+│  2. Save to Recommend DB│
 └────────┬────────────────┘
          │
          ▼
-┌─────────────────┐
-│ Recommend DB    │
-│                 │
-│ - Utility Matrix│
-│ - Similarity    │
-│ - Preferences   │
-└────────┬────────┘
+┌────────────────────────┐
+│ Recommend DB           │
+│                        │
+│ - Utility Matrix       │
+│ - Product embedding    │
+└────────┬───────────────┘
          │
          ▼
 ┌─────────────────┐
