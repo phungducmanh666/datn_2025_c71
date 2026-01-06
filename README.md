@@ -535,8 +535,7 @@ Job này gọi stored procedure `sp_rebuild_utility_matrix` trong database `reco
 
 1. **Trích xuất dữ liệu đánh giá** từ bảng reviews/ratings trong Order Database
 2. **Xây dựng User-Item Matrix** (ma trận người dùng - sản phẩm)
-3. **Tính toán similarity scores** giữa các sản phẩm
-4. **Lưu trữ kết quả** vào các bảng trong Recommend Database
+3. **Lưu trữ kết quả** vào các bảng trong Recommend Database
 
 > **📝 Chi tiết**: Xem file `./database_schema_sql/recommend.database.sql` để biết cấu trúc của stored procedure.
 
@@ -558,9 +557,7 @@ Job này gọi stored procedure `sp_rebuild_utility_matrix` trong database `reco
 ┌─────────────────────────┐
 │  sp_rebuild_utility_matrix │
 │                         │
-│  1. Extract ratings     │
-│  2. Build matrix        │
-│  3. Calculate scores    │
+│  1. Extract ratings     │  
 └────────┬────────────────┘
          │
          ▼
